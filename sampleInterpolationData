@@ -1,5 +1,8 @@
+#testing on creating a point later from xy data
+
 print("ready")
 
+#import directories
 import arcpy
 from arcpy import env
 from arcpy.sa import *
@@ -13,8 +16,8 @@ temporalDataFilesWorkspace = (arcpy.env.workspace + "\\Data\\WeatherStations\\Sp
 terrainDataFilesWorkspace = (arcpy.env.workspace + "\\Data\\TerrainData")
 arcpy.env.overwriteOutput = True
 ArcGISdataWorkspace = (arcpy.env.workspace + "\\ArcGISProjects\\WeatherStationInterpolation\\Data")
-XYdatafile = (arcpy.env.workspace + "\\Data\\WeatherStations\\SanJuanWeatherStationMetadataXY.csv")
-dataTableMerge = (arcpy.env.workspace + "\\Data\\WeatherStations\\SanJuanWeatherStationMetadata_01312023Data_SNOTEL.csv")
+XYdatafile = (arcpy.env.workspace + "\\Data\\WeatherStations\\SanJuanWeatherStationMetadata_CoordsXY.csv")
+dataTableMerge = (arcpy.env.workspace + "\\Data\\WeatherStations\\SanJuanWeatherStationMetadata_CAIC_WSData01242022.csv")
 demFiles = (arcpy.env.workspace + "\\Data\\DEM")
 projectBoundary = (arcpy.env.workspace + "\\Data\\StaticDataGDB.gdb\\ProjectBoundary")
 xField = "X_Coord"
@@ -37,12 +40,12 @@ print("point class created")
 #project class into proper cooridnate system
 arcpy.management.Project(outPointClass, projectedOutPointClass, PCSsr)
 print("coordinate system projected")
-
+#
 #merge table to pointclass
-stationDataJoin = arcpy.management.AddJoin(projectedOutPointClass, "Name", dataTableMerge, "Name", "KEEP_ALL")
+stationDataJoin = arcpy.management.AddJoin(projectedOutPointClass, "CaicName", dataTableMerge, "Station", "KEEP_COMMON")
 arcpy.management.CopyFeatures(stationDataJoin, weatherStationDataJoin)
 print("join finished")
-
+#
 #try interpolation for mx temp
 outNatNeighMxT = NaturalNeighbor(weatherStationDataJoin, "MxTp", 10)
 outNatNeighMxT.save(maxTempNN01312023)
@@ -57,3 +60,6 @@ print("interpolation completed for mn tp")
 outNatNeighMnT = NaturalNeighbor(weatherStationDataJoin, "SWE", 10)
 outNatNeighMnT.save(sweNN01312023)
 print("interpolation completed for SWE")
+
+
+
