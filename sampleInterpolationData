@@ -1,7 +1,5 @@
 #testing on creating a point later from xy data
 
-print("ready")
-
 #import directories
 import arcpy
 from arcpy import env
@@ -16,8 +14,8 @@ temporalDataFilesWorkspace = (arcpy.env.workspace + "\\Data\\WeatherStations\\Sp
 terrainDataFilesWorkspace = (arcpy.env.workspace + "\\Data\\TerrainData")
 arcpy.env.overwriteOutput = True
 ArcGISdataWorkspace = (arcpy.env.workspace + "\\ArcGISProjects\\WeatherStationInterpolation\\Data")
-XYdatafile = (arcpy.env.workspace + "\\Data\\WeatherStations\\SanJuanWeatherStationMetadata_CoordsXY.csv")
-dataTableMerge = (arcpy.env.workspace + "\\Data\\WeatherStations\\SanJuanWeatherStationMetadata_CAIC_WSData01242022.csv")
+XYdatafile = (arcpy.env.workspace + "\\Data\\WeatherStations\\SanJuanWeatherStationMetadataCoordsXY.csv")
+dataTableMerge = (arcpy.env.workspace + "\\Data\\WeatherStations\\SanJuanWeatherStationMetadataCAICWSData01242022.csv")
 demFiles = (arcpy.env.workspace + "\\Data\\DEM")
 projectBoundary = (arcpy.env.workspace + "\\Data\\StaticDataGDB.gdb\\ProjectBoundary")
 xField = "X_Coord"
@@ -42,24 +40,26 @@ arcpy.management.Project(outPointClass, projectedOutPointClass, PCSsr)
 print("coordinate system projected")
 #
 #merge table to pointclass
-stationDataJoin = arcpy.management.AddJoin(projectedOutPointClass, "CaicName", dataTableMerge, "Station", "KEEP_COMMON")
+
+stationDataJoin = arcpy.management.AddJoin(projectedOutPointClass, "Name", dataTableMerge, "Name", "KEEP_COMMON")
+print ("join created")
 arcpy.management.CopyFeatures(stationDataJoin, weatherStationDataJoin)
 print("join finished")
 #
-#try interpolation for mx temp
-outNatNeighMxT = NaturalNeighbor(weatherStationDataJoin, "MxTp", 10)
-outNatNeighMxT.save(maxTempNN01312023)
-print("interpolation completed for mx tp")
-
-#try interpolation for mn temp
-outNatNeighMnT = NaturalNeighbor(weatherStationDataJoin, "MnTp", 10)
-outNatNeighMnT.save(minTempNN01312023)
-print("interpolation completed for mn tp")
-
-#try interpolation for SWE
-outNatNeighMnT = NaturalNeighbor(weatherStationDataJoin, "SWE", 10)
-outNatNeighMnT.save(sweNN01312023)
-print("interpolation completed for SWE")
+# #try interpolation for mx temp
+# outNatNeighMxT = NaturalNeighbor(weatherStationDataJoin, "MxTp", 10)
+# outNatNeighMxT.save(maxTempNN01312023)
+# print("interpolation completed for mx tp")
+#
+# #try interpolation for mn temp
+# outNatNeighMnT = NaturalNeighbor(weatherStationDataJoin, "MnTp", 10)
+# outNatNeighMnT.save(minTempNN01312023)
+# print("interpolation completed for mn tp")
+#
+# #try interpolation for SWE
+# outNatNeighMnT = NaturalNeighbor(weatherStationDataJoin, "SWE", 10)
+# outNatNeighMnT.save(sweNN01312023)
+# print("interpolation completed for SWE")
 
 
 
