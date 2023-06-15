@@ -6,6 +6,7 @@ from arcpy import env
 from arcpy.sa import *
 import os
 from collections import defaultdict
+import datetime
 print("arcpy imported")
 
 # estabslish parameters
@@ -26,6 +27,9 @@ weatherStationDataJoin = (ArcGISdataWorkspace + "\\SanJuanWeatherStation_join.sh
 maxTempNN01312023 = (temporalDataFilesWorkspace + "\\01312023\\SanJuanWeatherStation_MxTpIDW.tif")
 minTempNN01312023 = (temporalDataFilesWorkspace + "\\01312023\\SanJuanWeatherStation_MnTpIDW.tif")
 sweNN01312023 = (temporalDataFilesWorkspace + "\\01312023\\SanJuanWeatherStation_SWE.tif")
+testWindWeatherStations = (ArcGISdataWorkspace + "\\windSpdStations.shp")
+testWindInterpolate = (ArcGISdataWorkspace + "\\windSpdStations_inter.tif")
+windSpeed = "Spd"
 arcpy.env.qualifiedFieldNames = False
 GCSsr = arcpy.SpatialReference(4326)
 PCSsr = arcpy.SpatialReference(6432)
@@ -40,13 +44,45 @@ arcpy.management.Project(outPointClass, projectedOutPointClass, PCSsr)
 print("coordinate system projected")
 #
 #merge table to pointclass
-
 stationDataJoin = arcpy.management.AddJoin(projectedOutPointClass, "Name", dataTableMerge, "Name", "KEEP_COMMON")
 print ("join created")
 arcpy.management.CopyFeatures(stationDataJoin, weatherStationDataJoin)
 print("join finished")
 #
-# #try interpolation for mx temp
+#list out fields in join table
+fieldList = arcpy.ListFields(weatherStationDataJoin)
+for field in fieldList:
+    print(field.name)
+#
+# # ## use update cursor to add Null Values
+fc_all = [str(el.name) for el in fieldList]
+for fc in fc_all:
+    with arcpy.da.UpdateCursor(weatherStationDataJoin, fc) as cursor:
+        for row in cursor:
+            if (row[0] == "-"): row[0] = "NULL"
+
+            cursor.updateRow(row)
+
+print("fields nulled")
+
+#interpolate wind speed
+try:
+    #spdQuery = "[Spd] IS NOT 'NULL'"
+    spdQuery = "{} IS NOT {}".format("[Spd]", "NULL")
+    windSpeedSelection = arcpy.management.SelectLayerByAttribute(weatherStationDataJoin, "NEW_SELECTION", spdQuery)
+    print("layer selected")
+
+    arcpy.management.CopyFeatures(windSpeedSelection, testWindWeatherStations)
+    print("features copied")
+
+except Exception as ex:
+    print(ex)
+# #try interpolate from wind
+# outNatNeighGst = NaturalNeighbor(weatherStationDataJoin, "Spd", 10)
+# outNatNeighGst.save(testWindInterpolate)
+# print("interpolation completed for Spd tp")
+
+#try interpolation for mx temp
 # outNatNeighMxT = NaturalNeighbor(weatherStationDataJoin, "MxTp", 10)
 # outNatNeighMxT.save(maxTempNN01312023)
 # print("interpolation completed for mx tp")
